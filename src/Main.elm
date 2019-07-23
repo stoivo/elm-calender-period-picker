@@ -1,21 +1,57 @@
-module Main exposing (Model, Msg(..), init, main, printMonths, printQuaters, printTermins, printYear, update, view)
+module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
-import Html exposing (Html, div, h1, img, text)
-import Html.Attributes exposing (class)
+import Html exposing (Html, button, div, h1, img, p, text)
+import Html.Attributes exposing (class, src)
+import Html.Events exposing (onClick)
+import List exposing ((::))
 
 
 
 ---- MODEL ----
 
 
+type alias CalYear =
+    { year : Int
+    }
+
+
+type alias CalQuater =
+    { year : Int
+    , quater : Int
+    }
+
+
+type alias CalTermin =
+    { year : Int
+    , termin : Int
+    }
+
+
+type alias CalPeriod =
+    { year : Int
+    , month : Int
+    }
+
+
+type RowType
+    = MyYear CalYear
+    | MyQuater CalQuater
+    | MyTermin CalTermin
+    | MyPeriod CalPeriod
+
+
 type alias Model =
-    {}
+    { picked : Maybe RowType
+    }
 
 
 init : ( Model, Cmd Msg )
 init =
-    ( {}, Cmd.none )
+    ( { picked = Nothing
+      }
+    , Cmd.none
+    )
 
 
 
@@ -26,9 +62,17 @@ type Msg
     = NoOp
 
 
+
+--| AddYear
+
+
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
-    ( model, Cmd.none )
+    case msg of
+        --AddYear ->
+        --    ( { model | pickedHistory = ( Year { year = 2019 }, Year { year = 2019 } ) :: model.pickedHistory }, Cmd.none )
+        NoOp ->
+            ( model, Cmd.none )
 
 
 
@@ -38,7 +82,8 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ div [ class "superholder" ]
+        [ displayLastClicked model.picked
+        , div [ class "superholder" ]
             [ div [ class "wit" ]
                 [ div [ class "holder" ]
                     [ printYear "2018"
@@ -103,7 +148,31 @@ printMonths =
         ]
 
 
+displayLastClicked : Maybe RowType -> Html Msg
+displayLastClicked row =
+    case row of
+        Just (MyYear pp) ->
+            p [] [ pp.year |> String.fromInt |> text ]
 
+        Just (MyQuater pp) ->
+            p [] [ text (String.fromInt pp.year ++ " Q" ++ String.fromInt pp.quater) ]
+
+        Just (MyTermin pp) ->
+            p [] [ text (String.fromInt pp.year ++ " T" ++ String.fromInt pp.termin) ]
+
+        Just (MyPeriod pp) ->
+            p [] [ text (String.fromInt pp.year ++ "-" ++ String.fromInt pp.month) ]
+
+        Nothing ->
+            p [] [ text "Nothing" ]
+
+
+
+--addYear : Model -> Html Msg
+--addYear model =
+--    div []
+--        [ button [ onClick AddYear ] [ text "Year" ]
+--        ]
 ---- PROGRAM ----
 
 
