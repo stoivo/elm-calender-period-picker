@@ -26,3 +26,32 @@ img {
 }
 
 
+.superholder{
+  /*border: dotted 10px;*/
+  float: left;
+  overflow-x: auto;
+  overflow-y: hidden;
+  width: 600px;
+}
+
+.wit{
+  width: 1200px;
+}
+
+.holder{
+  width: 600px;
+  float: left;
+}
+
+.row {
+  display: flex;
+  /*border: solid white 2px;*/
+}
+
+.item {
+  flex-grow: 1;
+  flex-basis: 0;
+  border: solid 1px;
+  text-align: center;
+  overflow: hidden;
+}
