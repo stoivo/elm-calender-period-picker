@@ -4,7 +4,9 @@ import Browser
 import Html exposing (Html, button, div, h1, img, p, text)
 import Html.Attributes exposing (class, src)
 import Html.Events exposing (onClick)
+import Iso8601
 import List exposing ((::))
+import Time exposing (utc)
 
 
 
@@ -56,6 +58,165 @@ init =
 
 
 --- Model helpers ---
+
+
+getStartDate : RowType -> Time.Posix
+getStartDate row =
+    case row of
+        MyYear pp ->
+            toDate pp.year 1 1
+
+        MyQuater pp ->
+            toDate pp.year (((pp.quater - 1) * 3) + 1) 1
+
+        MyTermin pp ->
+            toDate pp.year (((pp.termin - 1) * 2) + 1) 1
+
+        MyPeriod pp ->
+            toDate pp.year pp.month 1
+
+
+getEndDate : RowType -> Time.Posix
+getEndDate row =
+    case row of
+        MyYear pp ->
+            toLatestDateInMonth pp.year 12
+
+        MyQuater pp ->
+            toLatestDateInMonth pp.year (pp.quater * 3)
+
+        MyTermin pp ->
+            toLatestDateInMonth pp.year (pp.termin * 2)
+
+        MyPeriod pp ->
+            toLatestDateInMonth pp.year pp.month
+
+
+toDate : Int -> Int -> Int -> Time.Posix
+toDate year month day =
+    let
+        month_str =
+            if month < 10 then
+                String.fromInt month |> (\x -> "0" ++ x)
+
+            else
+                String.fromInt month
+
+        day_str =
+            if day < 10 then
+                String.fromInt day |> (\x -> "0" ++ x)
+
+            else
+                String.fromInt day
+
+        string =
+            String.fromInt year
+                ++ "-"
+                ++ month_str
+                ++ "-"
+                ++ day_str
+                ++ "T00:00:00.000Z"
+    in
+    string
+        |> Debug.log "date"
+        |> Iso8601.toTime
+        |> Result.withDefault (Time.millisToPosix 100000)
+
+
+toLatestDateInMonth : Int -> Int -> Time.Posix
+toLatestDateInMonth year month =
+    let
+        day =
+            case month of
+                1 ->
+                    31
+
+                2 ->
+                    28
+
+                3 ->
+                    31
+
+                4 ->
+                    30
+
+                5 ->
+                    31
+
+                6 ->
+                    30
+
+                7 ->
+                    31
+
+                8 ->
+                    31
+
+                9 ->
+                    30
+
+                10 ->
+                    31
+
+                11 ->
+                    30
+
+                12 ->
+                    31
+
+                _ ->
+                    5
+    in
+    toDate year month day
+
+
+toStringFromTime : Time.Posix -> String
+toStringFromTime time =
+    (Time.toYear utc time |> String.fromInt)
+        ++ "-"
+        ++ (Time.toMonth utc time |> toDanishMonth)
+        ++ "-"
+        ++ (Time.toDay utc time |> String.fromInt)
+
+
+toDanishMonth : Time.Month -> String
+toDanishMonth month =
+    case month of
+        Time.Jan ->
+            "01"
+
+        Time.Feb ->
+            "02"
+
+        Time.Mar ->
+            "03"
+
+        Time.Apr ->
+            "04"
+
+        Time.May ->
+            "05"
+
+        Time.Jun ->
+            "06"
+
+        Time.Jul ->
+            "07"
+
+        Time.Aug ->
+            "08"
+
+        Time.Sep ->
+            "09"
+
+        Time.Oct ->
+            "10"
+
+        Time.Nov ->
+            "11"
+
+        Time.Dec ->
+            "12"
 
 
 parseCalQuaterStartDate : CalQuater -> String
@@ -215,17 +376,8 @@ displayLastClicked row =
 ffBeginning : Maybe RowType -> Html Msg
 ffBeginning row =
     case row of
-        Just (MyYear pp) ->
-            p [] [ pp.year |> String.fromInt |> (\x -> x ++ "-01-01") |> text ]
-
-        Just (MyQuater pp) ->
-            p [] [ parseCalQuaterStartDate pp |> text ]
-
-        Just (MyTermin pp) ->
-            p [] [ parseCalTerminStartDate pp |> text ]
-
-        Just (MyPeriod pp) ->
-            p [] [ text (String.fromInt pp.year ++ "-" ++ String.fromInt pp.month ++ "-01") ]
+        Just x ->
+            p [] [ getStartDate x |> toStringFromTime |> text ]
 
         Nothing ->
             p [] [ text "Nothing" ]
@@ -234,17 +386,8 @@ ffBeginning row =
 ffend : Maybe RowType -> Html Msg
 ffend row =
     case row of
-        Just (MyYear pp) ->
-            p [] [ pp.year |> String.fromInt |> (\x -> x ++ "-12-31") |> text ]
-
-        Just (MyQuater pp) ->
-            p [] [ parseCalQuaterEndDate pp |> text ]
-
-        Just (MyTermin pp) ->
-            p [] [ parseCalTerminEndDate pp |> text ]
-
-        Just (MyPeriod pp) ->
-            p [] [ text (String.fromInt pp.year ++ "-" ++ String.fromInt pp.month ++ "-31") ]
+        Just x ->
+            p [] [ getEndDate x |> toStringFromTime |> text ]
 
         Nothing ->
             p [] [ text "Nothing" ]
