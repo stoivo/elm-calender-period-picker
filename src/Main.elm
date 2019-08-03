@@ -55,6 +55,30 @@ init =
 
 
 
+--- Model helpers ---
+
+
+parseCalQuaterStartDate : CalQuater -> String
+parseCalQuaterStartDate cal =
+    String.fromInt cal.year ++ "-" ++ String.fromInt (((cal.quater - 1) * 3) + 1) ++ "-01"
+
+
+parseCalQuaterEndDate : CalQuater -> String
+parseCalQuaterEndDate cal =
+    String.fromInt cal.year ++ "-" ++ String.fromInt (cal.quater * 3) ++ "-31"
+
+
+parseCalTerminStartDate : CalTermin -> String
+parseCalTerminStartDate cal =
+    String.fromInt cal.year ++ "-" ++ String.fromInt (((cal.termin - 1) * 2) + 1) ++ "-01"
+
+
+parseCalTerminEndDate : CalTermin -> String
+parseCalTerminEndDate cal =
+    String.fromInt cal.year ++ "-" ++ String.fromInt (cal.termin * 2) ++ "-31"
+
+
+
 ---- UPDATE ----
 
 
@@ -92,6 +116,8 @@ view : Model -> Html Msg
 view model =
     div []
         [ displayLastClicked model.picked
+        , ffBeginning model.picked
+        , ffend model.picked
         , button [ onClick UnPick ] [ text "unpick" ]
         , div [ class "superholder" ]
             [ div [ class "wit" ]
@@ -180,18 +206,51 @@ displayLastClicked row =
             p [] [ text (String.fromInt pp.year ++ " T" ++ String.fromInt pp.termin) ]
 
         Just (MyPeriod pp) ->
-            p [] [ text (String.fromInt pp.year ++ "-" ++ String.fromInt pp.month) ]
+            p [] [ text (String.fromInt pp.year ++ "-" ++ String.fromInt pp.month ++ "-01") ]
+
+        Nothing ->
+            p [] [ text "Nothing" ]
+
+
+ffBeginning : Maybe RowType -> Html Msg
+ffBeginning row =
+    case row of
+        Just (MyYear pp) ->
+            p [] [ pp.year |> String.fromInt |> (\x -> x ++ "-01-01") |> text ]
+
+        Just (MyQuater pp) ->
+            p [] [ parseCalQuaterStartDate pp |> text ]
+
+        Just (MyTermin pp) ->
+            p [] [ parseCalTerminStartDate pp |> text ]
+
+        Just (MyPeriod pp) ->
+            p [] [ text (String.fromInt pp.year ++ "-" ++ String.fromInt pp.month ++ "-01") ]
+
+        Nothing ->
+            p [] [ text "Nothing" ]
+
+
+ffend : Maybe RowType -> Html Msg
+ffend row =
+    case row of
+        Just (MyYear pp) ->
+            p [] [ pp.year |> String.fromInt |> (\x -> x ++ "-12-31") |> text ]
+
+        Just (MyQuater pp) ->
+            p [] [ parseCalQuaterEndDate pp |> text ]
+
+        Just (MyTermin pp) ->
+            p [] [ parseCalTerminEndDate pp |> text ]
+
+        Just (MyPeriod pp) ->
+            p [] [ text (String.fromInt pp.year ++ "-" ++ String.fromInt pp.month ++ "-31") ]
 
         Nothing ->
             p [] [ text "Nothing" ]
 
 
 
---addYear : Model -> Html Msg
---addYear model =
---    div []
---        [ button [ onClick AddYear ] [ text "Year" ]
---        ]
 ---- PROGRAM ----
 
 
