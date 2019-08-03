@@ -60,6 +60,8 @@ init =
 
 type Msg
     = NoOp
+    | Pick RowType
+    | UnPick
 
 
 
@@ -69,13 +71,20 @@ type Msg
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        Pick newpicked ->
+            ( { model | picked = Just newpicked }, Cmd.none )
+
         --AddYear ->
         --    ( { model | pickedHistory = ( Year { year = 2019 }, Year { year = 2019 } ) :: model.pickedHistory }, Cmd.none )
         NoOp ->
             ( model, Cmd.none )
 
+        UnPick ->
+            ( model, Cmd.none )
 
 
+
+--( { model | picked = Nothing }, Cmd.none )
 ---- VIEW ----
 
 
@@ -83,68 +92,78 @@ view : Model -> Html Msg
 view model =
     div []
         [ displayLastClicked model.picked
+        , button [ onClick UnPick ] [ text "unpick" ]
         , div [ class "superholder" ]
             [ div [ class "wit" ]
                 [ div [ class "holder" ]
-                    [ printYear "2018"
-                    , printQuaters
-                    , printTermins
-                    , printMonths
+                    [ printYear 2018
+                    , printQuaters 2018
+                    , printTermins 2018
+                    , printMonths 2018
                     ]
                 , div [ class "holder" ]
-                    [ printYear "2019"
-                    , printQuaters
-                    , printTermins
-                    , printMonths
+                    [ printYear 2019
+                    , printQuaters 2019
+                    , printTermins 2019
+                    , printMonths 2019
+                    ]
+                , div [ class "holder" ]
+                    [ printYear 2020
+                    , printQuaters 2020
+                    , printTermins 2020
+                    , printMonths 2020
                     ]
                 ]
             ]
         ]
 
 
-printYear : String -> Html Msg
+printYear : Int -> Html Msg
 printYear year =
     div [ class "row" ]
-        [ div [ class "item" ] [ text year ] ]
-
-
-printQuaters : Html Msg
-printQuaters =
-    div [ class "row" ]
-        [ div [ class "item" ] [ text "Q1" ]
-        , div [ class "item" ] [ text "Q2" ]
-        , div [ class "item" ] [ text "Q3" ]
-        , div [ class "item" ] [ text "Q4" ]
+        [ div
+            [ class "item", onClick (Pick (MyYear { year = year })) ]
+            [ String.fromInt year |> text ]
         ]
 
 
-printTermins : Html Msg
-printTermins =
+printQuaters : Int -> Html Msg
+printQuaters year =
     div [ class "row" ]
-        [ div [ class "item" ] [ text "jan-feb" ]
-        , div [ class "item" ] [ text "mar-apr" ]
-        , div [ class "item" ] [ text "mai-jun" ]
-        , div [ class "item" ] [ text "jul-aug" ]
-        , div [ class "item" ] [ text "sep-okt" ]
-        , div [ class "item" ] [ text "nov-des" ]
+        [ div [ class "item", onClick (Pick (MyQuater { year = year, quater = 1 })) ] [ text "Q1" ]
+        , div [ class "item", onClick (Pick (MyQuater { year = year, quater = 2 })) ] [ text "Q2" ]
+        , div [ class "item", onClick (Pick (MyQuater { year = year, quater = 3 })) ] [ text "Q3" ]
+        , div [ class "item", onClick (Pick (MyQuater { year = year, quater = 4 })) ] [ text "Q4" ]
         ]
 
 
-printMonths : Html Msg
-printMonths =
+printTermins : Int -> Html Msg
+printTermins year =
     div [ class "row" ]
-        [ div [ class "item" ] [ text "jan" ]
-        , div [ class "item" ] [ text "feb" ]
-        , div [ class "item" ] [ text "mar" ]
-        , div [ class "item" ] [ text "apr" ]
-        , div [ class "item" ] [ text "mai" ]
-        , div [ class "item" ] [ text "jun" ]
-        , div [ class "item" ] [ text "jul" ]
-        , div [ class "item" ] [ text "aug" ]
-        , div [ class "item" ] [ text "sep" ]
-        , div [ class "item" ] [ text "okt" ]
-        , div [ class "item" ] [ text "nov" ]
-        , div [ class "item" ] [ text "des" ]
+        [ div [ class "item", onClick (Pick (MyTermin { year = year, termin = 1 })) ] [ text "jan-feb" ]
+        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 2 })) ] [ text "mar-apr" ]
+        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 3 })) ] [ text "mai-jun" ]
+        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 4 })) ] [ text "jul-aug" ]
+        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 5 })) ] [ text "sep-okt" ]
+        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 6 })) ] [ text "nov-des" ]
+        ]
+
+
+printMonths : Int -> Html Msg
+printMonths year =
+    div [ class "row" ]
+        [ div [ class "item", onClick (Pick (MyPeriod { year = year, month = 1 })) ] [ text "jan" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 2 })) ] [ text "feb" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 3 })) ] [ text "mar" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 4 })) ] [ text "apr" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 5 })) ] [ text "mai" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 6 })) ] [ text "jun" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 7 })) ] [ text "jul" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 8 })) ] [ text "aug" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 9 })) ] [ text "sep" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 10 })) ] [ text "okt" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 11 })) ] [ text "nov" ]
+        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 12 })) ] [ text "des" ]
         ]
 
 
