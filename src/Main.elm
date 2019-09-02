@@ -7,6 +7,7 @@ import Html.Events exposing (onClick)
 import Iso8601
 import List exposing ((::))
 import Time exposing (utc)
+import Time.Extra
 
 
 
@@ -45,12 +46,111 @@ type RowType
 
 type alias Model =
     { picked : Maybe RowType
+    , first_date : Time.Posix
+    , last_date : Time.Posix
     }
 
 
-init : ( Model, Cmd Msg )
-init =
+calQuaterInPeriod : Time.Posix -> Time.Posix -> List CalQuater
+calQuaterInPeriod first last =
+    calQuaterInPeriodRec first last []
+
+
+calQuaterInPeriodRec : Time.Posix -> Time.Posix -> List CalQuater -> List CalQuater
+calQuaterInPeriodRec first last agg =
+    if Time.posixToMillis last < Time.posixToMillis first then
+        agg
+
+    else
+        let
+            first_month =
+                Time.toMonth utc first |> toNumishMonth
+
+            highest_month =
+                if (first_month |> modBy 3) == 0 then
+                    first_month
+
+                else
+                    first_month + (3 - (first_month |> modBy 3))
+
+            quater =
+                highest_month // 3
+        in
+        calQuaterInPeriodRec
+            (Time.Extra.add Time.Extra.Month 3 utc first)
+            last
+            ({ year = Time.toYear utc first
+             , quater = quater
+             }
+                :: agg
+            )
+
+
+calTerminInPeriod : Time.Posix -> Time.Posix -> List CalTermin
+calTerminInPeriod first last =
+    calTerminInPeriodRec first last []
+
+
+calTerminInPeriodRec : Time.Posix -> Time.Posix -> List CalTermin -> List CalTermin
+calTerminInPeriodRec first last agg =
+    if Time.posixToMillis last < Time.posixToMillis first then
+        agg
+
+    else
+        let
+            highest_month =
+                if (Time.toMonth utc first |> toNumishMonth |> modBy 2) == 0 then
+                    Time.toMonth utc first |> toNumishMonth
+
+                else
+                    (Time.toMonth utc first |> toNumishMonth) + 1
+
+            termine =
+                highest_month // 2
+        in
+        calTerminInPeriodRec
+            (Time.Extra.add Time.Extra.Month 2 utc first)
+            last
+            ({ year = Time.toYear utc first
+             , termin = termine
+             }
+                :: agg
+            )
+
+
+calPeriodsInPeriod : Time.Posix -> Time.Posix -> List CalPeriod
+calPeriodsInPeriod first last =
+    calPeriodsInPeriodRec first last []
+
+
+calPeriodsInPeriodRec : Time.Posix -> Time.Posix -> List CalPeriod -> List CalPeriod
+calPeriodsInPeriodRec first last agg =
+    if Time.posixToMillis last < Time.posixToMillis first then
+        agg
+
+    else
+        calPeriodsInPeriodRec
+            (Time.Extra.add Time.Extra.Month 1 utc first)
+            last
+            ({ year = Time.toYear utc first, month = Time.toMonth utc first |> toNumishMonth } :: agg)
+
+
+init : ( Int, Int ) -> ( Model, Cmd Msg )
+init currentTime =
+    let
+        first_date =
+            currentTime
+                |> Tuple.first
+                |> Time.millisToPosix
+
+        last_date =
+            currentTime
+                |> Tuple.second
+                |> Time.millisToPosix
+    in
     ( { picked = Nothing
+      , first_date = first_date
+      , last_date = last_date
       }
     , Cmd.none
     )
@@ -179,6 +279,46 @@ toStringFromTime time =
         ++ (Time.toDay utc time |> String.fromInt)
 
 
+toNumishMonth : Time.Month -> Int
+toNumishMonth month =
+    case month of
+        Time.Jan ->
+            1
+
+        Time.Feb ->
+            2
+
+        Time.Mar ->
+            3
+
+        Time.Apr ->
+            4
+
+        Time.May ->
+            5
+
+        Time.Jun ->
+            6
+
+        Time.Jul ->
+            7
+
+        Time.Aug ->
+            8
+
+        Time.Sep ->
+            9
+
+        Time.Oct ->
+            10
+
+        Time.Nov ->
+            11
+
+        Time.Dec ->
+            12
+
+
 toDanishMonth : Time.Month -> String
 toDanishMonth month =
     case month of
@@ -259,8 +399,6 @@ update msg model =
         Pick newpicked ->
             ( { model | picked = Just newpicked }, Cmd.none )
 
-        --AddYear ->
-        --    ( { model | pickedHistory = ( Year { year = 2019 }, Year { year = 2019 } ) :: model.pickedHistory }, Cmd.none )
         NoOp ->
             ( model, Cmd.none )
 
@@ -281,27 +419,32 @@ view model =
         , ffend model.picked
         , button [ onClick UnPick ] [ text "unpick" ]
         , div [ class "superholder" ]
-            [ div [ class "wit" ]
-                [ div [ class "holder" ]
-                    [ printYear 2018
-                    , printQuaters 2018
-                    , printTermins 2018
-                    , printMonths 2018
-                    ]
-                , div [ class "holder" ]
-                    [ printYear 2019
-                    , printQuaters 2019
-                    , printTermins 2019
-                    , printMonths 2019
-                    ]
-                , div [ class "holder" ]
-                    [ printYear 2020
-                    , printQuaters 2020
-                    , printTermins 2020
-                    , printMonths 2020
-                    ]
-                ]
+            [ div
+                [ class "wit" ]
+                (List.range (model.first_date |> Time.toYear utc) (model.last_date |> Time.toYear utc)
+                    |> List.map (\year -> printTheShit model year)
+                )
             ]
+        ]
+
+
+printTheShit : Model -> Int -> Html Msg
+printTheShit model year =
+    div [ class "holder" ]
+        [ printStartAndEnd model
+        , printYear year
+        , printQuaters (calQuaterInPeriod model.first_date model.last_date) year
+        , printTermins (calTerminInPeriod model.first_date model.last_date) year
+        , printMonths (calPeriodsInPeriod model.first_date model.last_date) year
+        ]
+
+
+printStartAndEnd : Model -> Html Msg
+printStartAndEnd model =
+    div [ class "row" ]
+        [ div
+            [ class "item item-border" ]
+            [ (toStringFromTime model.first_date ++ " to " ++ toStringFromTime model.last_date) |> text ]
         ]
 
 
@@ -309,49 +452,127 @@ printYear : Int -> Html Msg
 printYear year =
     div [ class "row" ]
         [ div
-            [ class "item", onClick (Pick (MyYear { year = year })) ]
+            [ class "item item-border", onClick (Pick (MyYear { year = year })) ]
             [ String.fromInt year |> text ]
         ]
 
 
-printQuaters : Int -> Html Msg
-printQuaters year =
+printQuaters : List CalQuater -> Int -> Html Msg
+printQuaters list year =
+    let
+        q1 =
+            List.any (\x -> x.year == year && x.quater == 1) list
+
+        q2 =
+            List.any (\x -> x.year == year && x.quater == 2) list
+
+        q3 =
+            List.any (\x -> x.year == year && x.quater == 3) list
+
+        q4 =
+            List.any (\x -> x.year == year && x.quater == 4) list
+    in
     div [ class "row" ]
-        [ div [ class "item", onClick (Pick (MyQuater { year = year, quater = 1 })) ] [ text "Q1" ]
-        , div [ class "item", onClick (Pick (MyQuater { year = year, quater = 2 })) ] [ text "Q2" ]
-        , div [ class "item", onClick (Pick (MyQuater { year = year, quater = 3 })) ] [ text "Q3" ]
-        , div [ class "item", onClick (Pick (MyQuater { year = year, quater = 4 })) ] [ text "Q4" ]
+        [ div [ class "item item-border", onClick (Pick (MyQuater { year = year, quater = 1 })) ] [ text (maybeDisabled q1 "Q1") ]
+        , div [ class "item item-border", onClick (Pick (MyQuater { year = year, quater = 2 })) ] [ text (maybeDisabled q2 "Q2") ]
+        , div [ class "item item-border", onClick (Pick (MyQuater { year = year, quater = 3 })) ] [ text (maybeDisabled q3 "Q3") ]
+        , div [ class "item item-border", onClick (Pick (MyQuater { year = year, quater = 4 })) ] [ text (maybeDisabled q4 "Q4") ]
         ]
 
 
-printTermins : Int -> Html Msg
-printTermins year =
+printTermins : List CalTermin -> Int -> Html Msg
+printTermins list year =
+    let
+        t1 =
+            List.any (\x -> x.year == year && x.termin == 1) list
+
+        t2 =
+            List.any (\x -> x.year == year && x.termin == 2) list
+
+        t3 =
+            List.any (\x -> x.year == year && x.termin == 3) list
+
+        t4 =
+            List.any (\x -> x.year == year && x.termin == 4) list
+
+        t5 =
+            List.any (\x -> x.year == year && x.termin == 5) list
+
+        t6 =
+            List.any (\x -> x.year == year && x.termin == 6) list
+    in
     div [ class "row" ]
-        [ div [ class "item", onClick (Pick (MyTermin { year = year, termin = 1 })) ] [ text "jan-feb" ]
-        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 2 })) ] [ text "mar-apr" ]
-        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 3 })) ] [ text "mai-jun" ]
-        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 4 })) ] [ text "jul-aug" ]
-        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 5 })) ] [ text "sep-okt" ]
-        , div [ class "item", onClick (Pick (MyTermin { year = year, termin = 6 })) ] [ text "nov-des" ]
+        [ div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 1 })) ] [ text (maybeDisabled t1 "jan-feb") ]
+        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 2 })) ] [ text (maybeDisabled t2 "mar-apr") ]
+        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 3 })) ] [ text (maybeDisabled t3 "mai-jun") ]
+        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 4 })) ] [ text (maybeDisabled t4 "jul-aug") ]
+        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 5 })) ] [ text (maybeDisabled t5 "sep-okt") ]
+        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 6 })) ] [ text (maybeDisabled t6 "nov-des") ]
         ]
 
 
-printMonths : Int -> Html Msg
-printMonths year =
+printMonths : List CalPeriod -> Int -> Html Msg
+printMonths list year =
+    let
+        m1 =
+            List.any (\x -> x.year == year && x.month == 1) list
+
+        m2 =
+            List.any (\x -> x.year == year && x.month == 2) list
+
+        m3 =
+            List.any (\x -> x.year == year && x.month == 3) list
+
+        m4 =
+            List.any (\x -> x.year == year && x.month == 4) list
+
+        m5 =
+            List.any (\x -> x.year == year && x.month == 5) list
+
+        m6 =
+            List.any (\x -> x.year == year && x.month == 6) list
+
+        m7 =
+            List.any (\x -> x.year == year && x.month == 7) list
+
+        m8 =
+            List.any (\x -> x.year == year && x.month == 8) list
+
+        m9 =
+            List.any (\x -> x.year == year && x.month == 9) list
+
+        m10 =
+            List.any (\x -> x.year == year && x.month == 10) list
+
+        m11 =
+            List.any (\x -> x.year == year && x.month == 11) list
+
+        m12 =
+            List.any (\x -> x.year == year && x.month == 12) list
+    in
     div [ class "row" ]
-        [ div [ class "item", onClick (Pick (MyPeriod { year = year, month = 1 })) ] [ text "jan" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 2 })) ] [ text "feb" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 3 })) ] [ text "mar" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 4 })) ] [ text "apr" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 5 })) ] [ text "mai" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 6 })) ] [ text "jun" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 7 })) ] [ text "jul" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 8 })) ] [ text "aug" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 9 })) ] [ text "sep" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 10 })) ] [ text "okt" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 11 })) ] [ text "nov" ]
-        , div [ class "item", onClick (Pick (MyPeriod { year = year, month = 12 })) ] [ text "des" ]
+        [ div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 1 })) ] [ text (maybeDisabled m1 "jan") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 2 })) ] [ text (maybeDisabled m2 "feb") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 3 })) ] [ text (maybeDisabled m3 "mar") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 4 })) ] [ text (maybeDisabled m4 "apr") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 5 })) ] [ text (maybeDisabled m5 "mai") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 6 })) ] [ text (maybeDisabled m6 "jun") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 7 })) ] [ text (maybeDisabled m7 "jul") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 8 })) ] [ text (maybeDisabled m8 "aug") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 9 })) ] [ text (maybeDisabled m9 "sep") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 10 })) ] [ text (maybeDisabled m10 "okt") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 11 })) ] [ text (maybeDisabled m11 "nov") ]
+        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 12 })) ] [ text (maybeDisabled m12 "des") ]
         ]
+
+
+maybeDisabled : Bool -> String -> String
+maybeDisabled enabled string =
+    if enabled then
+        string
+
+    else
+        string ++ " disabled"
 
 
 displayLastClicked : Maybe RowType -> Html Msg
@@ -397,11 +618,11 @@ ffend row =
 ---- PROGRAM ----
 
 
-main : Program () Model Msg
+main : Program ( Int, Int ) Model Msg
 main =
     Browser.element
         { view = view
-        , init = \_ -> init
+        , init = init
         , update = update
         , subscriptions = always Sub.none
         }

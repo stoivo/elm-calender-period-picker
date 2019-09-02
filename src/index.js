@@ -3,7 +3,14 @@ import { Elm } from './Main.elm';
 import * as serviceWorker from './serviceWorker';
 
 Elm.Main.init({
-  node: document.getElementById('root')
+  node: document.getElementById('root'),
+  flags: [new Date('2018-01-01').getTime(), Date.now()]
+});
+
+Elm.Main.init({
+  node: document.getElementById('root-current-year'),
+  flags: [Date.now(), Date.now()]
+  // flags: [new Date('2019-01-01').getTime(), Date.now()]
 });
 
 // If you want your app to work offline and load faster, you can change
