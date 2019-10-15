@@ -358,26 +358,6 @@ toDanishMonth month =
             "12"
 
 
-parseCalQuaterStartDate : CalQuater -> String
-parseCalQuaterStartDate cal =
-    String.fromInt cal.year ++ "-" ++ String.fromInt (((cal.quater - 1) * 3) + 1) ++ "-01"
-
-
-parseCalQuaterEndDate : CalQuater -> String
-parseCalQuaterEndDate cal =
-    String.fromInt cal.year ++ "-" ++ String.fromInt (cal.quater * 3) ++ "-31"
-
-
-parseCalTerminStartDate : CalTermin -> String
-parseCalTerminStartDate cal =
-    String.fromInt cal.year ++ "-" ++ String.fromInt (((cal.termin - 1) * 2) + 1) ++ "-01"
-
-
-parseCalTerminEndDate : CalTermin -> String
-parseCalTerminEndDate cal =
-    String.fromInt cal.year ++ "-" ++ String.fromInt (cal.termin * 2) ++ "-31"
-
-
 
 ---- UPDATE ----
 
@@ -386,10 +366,6 @@ type Msg
     = NoOp
     | Pick RowType
     | UnPick
-
-
-
---| AddYear
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -412,9 +388,9 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div []
-        [ displayLastClicked model.picked
-        , ffBeginning model.picked
-        , ffend model.picked
+        [ mRowView model.picked
+        , mRowBeginningView model.picked
+        , mRowEndView model.picked
         , button [ onClick UnPick ] [ text "unpick" ]
         , div [ class "superholder" ]
             [ div
@@ -514,8 +490,8 @@ maybeDisabled enabled string =
         string ++ " disabled"
 
 
-displayLastClicked : Maybe RowType -> Html Msg
-displayLastClicked row =
+mRowView : Maybe RowType -> Html Msg
+mRowView row =
     case row of
         Just (MyYear pp) ->
             p [] [ pp.year |> String.fromInt |> text ]
@@ -533,8 +509,8 @@ displayLastClicked row =
             p [] [ text "Nothing" ]
 
 
-ffBeginning : Maybe RowType -> Html Msg
-ffBeginning row =
+mRowBeginningView : Maybe RowType -> Html Msg
+mRowBeginningView row =
     case row of
         Just x ->
             p [] [ getStartDate x |> toStringFromTime |> text ]
@@ -543,8 +519,8 @@ ffBeginning row =
             p [] [ text "Nothing" ]
 
 
-ffend : Maybe RowType -> Html Msg
-ffend row =
+mRowEndView : Maybe RowType -> Html Msg
+mRowEndView row =
     case row of
         Just x ->
             p [] [ getEndDate x |> toStringFromTime |> text ]
