@@ -5,6 +5,7 @@ import Html exposing (Html, button, div, h1, img, p, text)
 import Html.Attributes exposing (class, src)
 import Html.Events exposing (onClick)
 import Iso8601
+import Json.Decode as Json
 import List exposing ((::))
 import Time exposing (utc)
 import Time.Extra
@@ -12,6 +13,12 @@ import Time.Extra
 
 
 ---- MODEL ----
+
+
+type alias InitFlags =
+    { from : Time.Posix
+    , to : Time.Posix
+    }
 
 
 type alias CalYear =
@@ -134,25 +141,30 @@ calPeriodsInPeriodRec first last agg =
             ({ year = Time.toYear utc first, month = Time.toMonth utc first |> toNumishMonth } :: agg)
 
 
-init : ( Int, Int ) -> ( Model, Cmd Msg )
-init currentTime =
+init : Json.Value -> ( Model, Cmd Msg )
+init input =
     let
-        first_date =
-            currentTime
-                |> Tuple.first
-                |> Time.millisToPosix
-
-        last_date =
-            currentTime
-                |> Tuple.second
-                |> Time.millisToPosix
+        decoder =
+            Json.map2 InitFlags
+                (Json.field "from" (Json.int |> Json.map Time.millisToPosix))
+                (Json.field "to" (Json.int |> Json.map Time.millisToPosix))
     in
-    ( { picked = Nothing
-      , first_date = first_date
-      , last_date = last_date
-      }
-    , Cmd.none
-    )
+    case Json.decodeValue decoder input of
+        Ok flags ->
+            ( { picked = Nothing
+              , first_date = flags.from
+              , last_date = flags.to
+              }
+            , Cmd.none
+            )
+
+        Err error ->
+            ( { picked = Nothing
+              , first_date = Time.millisToPosix 1564617600000
+              , last_date = Time.millisToPosix 1564617600000
+              }
+            , Cmd.none
+            )
 
 
 
@@ -533,7 +545,7 @@ mRowEndView row =
 ---- PROGRAM ----
 
 
-main : Program ( Int, Int ) Model Msg
+main : Program Json.Value Model Msg
 main =
     Browser.element
         { view = view
