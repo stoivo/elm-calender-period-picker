@@ -15,8 +15,7 @@ import Time.Extra
 
 
 type alias CalYear =
-    { year : Int
-    }
+    { year : Int }
 
 
 type alias CalQuater =
@@ -403,11 +402,10 @@ update msg model =
             ( model, Cmd.none )
 
         UnPick ->
-            ( model, Cmd.none )
+            ( { model | picked = Nothing }, Cmd.none )
 
 
 
---( { model | picked = Nothing }, Cmd.none )
 ---- VIEW ----
 
 
@@ -421,8 +419,10 @@ view model =
         , div [ class "superholder" ]
             [ div
                 [ class "wit" ]
-                (List.range (model.first_date |> Time.toYear utc) (model.last_date |> Time.toYear utc)
-                    |> List.map (\year -> printTheShit model year)
+                (List.range
+                    (model.first_date |> Time.toYear utc)
+                    (model.last_date |> Time.toYear utc)
+                    |> List.map (printTheShit model)
                 )
             ]
         ]
@@ -451,119 +451,58 @@ printStartAndEnd model =
 printYear : Int -> Html Msg
 printYear year =
     div [ class "row" ]
-        [ div
-            [ class "item item-border", onClick (Pick (MyYear { year = year })) ]
-            [ String.fromInt year |> text ]
+        [ viewPrintBlock
+            (MyYear { year = year })
+            True
+            (String.fromInt year)
         ]
 
 
 printQuaters : List CalQuater -> Int -> Html Msg
 printQuaters list year =
-    let
-        q1 =
-            List.any (\x -> x.year == year && x.quater == 1) list
-
-        q2 =
-            List.any (\x -> x.year == year && x.quater == 2) list
-
-        q3 =
-            List.any (\x -> x.year == year && x.quater == 3) list
-
-        q4 =
-            List.any (\x -> x.year == year && x.quater == 4) list
-    in
     div [ class "row" ]
-        [ div [ class "item item-border", onClick (Pick (MyQuater { year = year, quater = 1 })) ] [ text (maybeDisabled q1 "Q1") ]
-        , div [ class "item item-border", onClick (Pick (MyQuater { year = year, quater = 2 })) ] [ text (maybeDisabled q2 "Q2") ]
-        , div [ class "item item-border", onClick (Pick (MyQuater { year = year, quater = 3 })) ] [ text (maybeDisabled q3 "Q3") ]
-        , div [ class "item item-border", onClick (Pick (MyQuater { year = year, quater = 4 })) ] [ text (maybeDisabled q4 "Q4") ]
-        ]
+        (List.range 1 4
+            |> List.map
+                (\int ->
+                    viewPrintBlock
+                        (MyQuater { year = year, quater = int })
+                        (List.any (\x -> x.year == year && x.quater == int) list)
+                        ("q" ++ String.fromInt int)
+                )
+        )
 
 
 printTermins : List CalTermin -> Int -> Html Msg
 printTermins list year =
-    let
-        t1 =
-            List.any (\x -> x.year == year && x.termin == 1) list
-
-        t2 =
-            List.any (\x -> x.year == year && x.termin == 2) list
-
-        t3 =
-            List.any (\x -> x.year == year && x.termin == 3) list
-
-        t4 =
-            List.any (\x -> x.year == year && x.termin == 4) list
-
-        t5 =
-            List.any (\x -> x.year == year && x.termin == 5) list
-
-        t6 =
-            List.any (\x -> x.year == year && x.termin == 6) list
-    in
     div [ class "row" ]
-        [ div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 1 })) ] [ text (maybeDisabled t1 "jan-feb") ]
-        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 2 })) ] [ text (maybeDisabled t2 "mar-apr") ]
-        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 3 })) ] [ text (maybeDisabled t3 "mai-jun") ]
-        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 4 })) ] [ text (maybeDisabled t4 "jul-aug") ]
-        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 5 })) ] [ text (maybeDisabled t5 "sep-okt") ]
-        , div [ class "item item-border", onClick (Pick (MyTermin { year = year, termin = 6 })) ] [ text (maybeDisabled t6 "nov-des") ]
-        ]
+        (List.range 1 6
+            |> List.map
+                (\int ->
+                    viewPrintBlock
+                        (MyTermin { year = year, termin = int })
+                        (List.any (\x -> x.year == year && x.termin == int) list)
+                        ("t" ++ String.fromInt int)
+                )
+        )
 
 
 printMonths : List CalPeriod -> Int -> Html Msg
 printMonths list year =
-    let
-        m1 =
-            List.any (\x -> x.year == year && x.month == 1) list
-
-        m2 =
-            List.any (\x -> x.year == year && x.month == 2) list
-
-        m3 =
-            List.any (\x -> x.year == year && x.month == 3) list
-
-        m4 =
-            List.any (\x -> x.year == year && x.month == 4) list
-
-        m5 =
-            List.any (\x -> x.year == year && x.month == 5) list
-
-        m6 =
-            List.any (\x -> x.year == year && x.month == 6) list
-
-        m7 =
-            List.any (\x -> x.year == year && x.month == 7) list
-
-        m8 =
-            List.any (\x -> x.year == year && x.month == 8) list
-
-        m9 =
-            List.any (\x -> x.year == year && x.month == 9) list
-
-        m10 =
-            List.any (\x -> x.year == year && x.month == 10) list
-
-        m11 =
-            List.any (\x -> x.year == year && x.month == 11) list
-
-        m12 =
-            List.any (\x -> x.year == year && x.month == 12) list
-    in
     div [ class "row" ]
-        [ div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 1 })) ] [ text (maybeDisabled m1 "jan") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 2 })) ] [ text (maybeDisabled m2 "feb") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 3 })) ] [ text (maybeDisabled m3 "mar") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 4 })) ] [ text (maybeDisabled m4 "apr") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 5 })) ] [ text (maybeDisabled m5 "mai") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 6 })) ] [ text (maybeDisabled m6 "jun") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 7 })) ] [ text (maybeDisabled m7 "jul") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 8 })) ] [ text (maybeDisabled m8 "aug") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 9 })) ] [ text (maybeDisabled m9 "sep") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 10 })) ] [ text (maybeDisabled m10 "okt") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 11 })) ] [ text (maybeDisabled m11 "nov") ]
-        , div [ class "item item-border", onClick (Pick (MyPeriod { year = year, month = 12 })) ] [ text (maybeDisabled m12 "des") ]
-        ]
+        (List.range 1 12
+            |> List.map
+                (\mnd ->
+                    viewPrintBlock
+                        (MyPeriod { year = year, month = mnd })
+                        (List.any (\x -> x.year == year && x.month == mnd) list)
+                        ("m" ++ String.fromInt mnd)
+                )
+        )
+
+
+viewPrintBlock : RowType -> Bool -> String -> Html Msg
+viewPrintBlock row disabled teext =
+    div [ class "item item-border", onClick (Pick row) ] [ text (maybeDisabled disabled teext) ]
 
 
 maybeDisabled : Bool -> String -> String
