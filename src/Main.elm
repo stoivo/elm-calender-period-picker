@@ -404,21 +404,18 @@ view model =
         , mRowBeginningView model.picked
         , mRowEndView model.picked
         , button [ onClick UnPick ] [ text "unpick" ]
-        , div [ class "superholder" ]
-            [ div
-                [ class "wit" ]
-                (List.range
-                    (model.first_date |> Time.toYear utc)
-                    (model.last_date |> Time.toYear utc)
-                    |> List.map (printTheShit model)
-                )
-            ]
+        , div [ class "calenders" ]
+            (List.range
+                (model.first_date |> Time.toYear utc)
+                (model.last_date |> Time.toYear utc)
+                |> List.map (printTheShit model)
+            )
         ]
 
 
 printTheShit : Model -> Int -> Html Msg
 printTheShit model year =
-    div [ class "holder" ]
+    div [ class "calender" ]
         [ printStartAndEnd model
         , printYear year
         , printQuaters (calQuaterInPeriod model.first_date model.last_date) year
@@ -429,16 +426,16 @@ printTheShit model year =
 
 printStartAndEnd : Model -> Html Msg
 printStartAndEnd model =
-    div [ class "row" ]
+    div [ class "calender-rows" ]
         [ div
-            [ class "item item-border" ]
+            [ class "calender-rows-unit" ]
             [ (toStringFromTime model.first_date ++ " to " ++ toStringFromTime model.last_date) |> text ]
         ]
 
 
 printYear : Int -> Html Msg
 printYear year =
-    div [ class "row" ]
+    div [ class "calender-rows" ]
         [ viewPrintBlock
             (MyYear { year = year })
             True
@@ -448,7 +445,7 @@ printYear year =
 
 printQuaters : List CalQuater -> Int -> Html Msg
 printQuaters list year =
-    div [ class "row" ]
+    div [ class "calender-rows" ]
         (List.range 1 4
             |> List.map
                 (\int ->
@@ -462,7 +459,7 @@ printQuaters list year =
 
 printTermins : List CalTermin -> Int -> Html Msg
 printTermins list year =
-    div [ class "row" ]
+    div [ class "calender-rows" ]
         (List.range 1 6
             |> List.map
                 (\int ->
@@ -476,7 +473,7 @@ printTermins list year =
 
 printMonths : List CalPeriod -> Int -> Html Msg
 printMonths list year =
-    div [ class "row" ]
+    div [ class "calender-rows" ]
         (List.range 1 12
             |> List.map
                 (\mnd ->
@@ -490,7 +487,7 @@ printMonths list year =
 
 viewPrintBlock : RowType -> Bool -> String -> Html Msg
 viewPrintBlock row disabled teext =
-    div [ class "item item-border", onClick (Pick row) ] [ text (maybeDisabled disabled teext) ]
+    button [ class "calender-rows-unit", onClick (Pick row) ] [ text (maybeDisabled disabled teext) ]
 
 
 maybeDisabled : Bool -> String -> String

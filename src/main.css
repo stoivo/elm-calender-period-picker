@@ -16,45 +16,38 @@ body {
   color: #293c4b;
 }
 
-h1 {
-  font-size: 30px;
+
+.view-into-calender {
+  width: 600px;
 }
 
-img {
-  margin: 20px 0;
-  max-width: 200px;
-}
-
-
-.superholder{
-  /*border: dotted 10px;*/
-  float: left;
+.calenders{
   overflow-x: auto;
   overflow-y: hidden;
-  width: 600px;
-}
-
-.wit{
-  width: 1800px;
-}
-
-.holder{
-  width: 600px;
-  float: left;
-}
-
-.row {
   display: flex;
-  /*border: solid white 2px;*/
+  flex-direction: row
 }
 
-.item {
+.calender {
   flex-grow: 1;
   flex-basis: 0;
-  text-align: center;
-  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
-.item-border {
-  border: solid 1px;
+.calender-rows {
+  flex-grow: 1;
+  flex-basis: 0;
+  display: flex;
+  flex-direction: row;
+}
+
+.calender-rows-unit {
+  flex-grow: 1;
+  flex-basis: 0;
+
+  overflow: hidden;
+
+  min-width: 35px;
+  min-height: 33px;
 }
