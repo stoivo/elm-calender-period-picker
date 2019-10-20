@@ -16,7 +16,6 @@ body {
   color: #293c4b;
 }
 
-
 .view-into-calender {
   width: 600px;
 }
@@ -50,4 +49,20 @@ body {
 
   min-width: 35px;
   min-height: 33px;
+}
+
+.calender-rows-unit > button {
+  width: 100%;
+  height: 100%;
+}
+
+/* custom */
+.calender-rows-unit {
+  border: solid black 1px;
+}
+
+button:disabled,
+button[disabled]{
+  background-color: tomato;
+  color: blue;
 }

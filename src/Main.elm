@@ -2,7 +2,7 @@ module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import Html exposing (Html, button, div, h1, img, p, text)
-import Html.Attributes exposing (class, src)
+import Html.Attributes exposing (class, disabled, src)
 import Html.Events exposing (onClick)
 import Iso8601
 import Json.Decode as Json
@@ -486,17 +486,17 @@ printMonths list year =
 
 
 viewPrintBlock : RowType -> Bool -> String -> Html Msg
-viewPrintBlock row disabled teext =
-    button [ class "calender-rows-unit", onClick (Pick row) ] [ text (maybeDisabled disabled teext) ]
+viewPrintBlock row enabled teext =
+    case enabled of
+        True ->
+            div [ class "calender-rows-unit" ]
+                [ button [ onClick (Pick row) ] [ text teext ]
+                ]
 
-
-maybeDisabled : Bool -> String -> String
-maybeDisabled enabled string =
-    if enabled then
-        string
-
-    else
-        string ++ " disabled"
+        False ->
+            div [ class "calender-rows-unit" ]
+                [ button [ disabled True ] [ text teext ]
+                ]
 
 
 mRowView : Maybe RowType -> Html Msg
