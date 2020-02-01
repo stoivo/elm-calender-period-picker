@@ -229,7 +229,6 @@ toDate year month day =
                 ++ "T00:00:00.000Z"
     in
     string
-        |> Debug.log "date"
         |> Iso8601.toTime
         |> Result.withDefault (Time.millisToPosix 100000)
 
