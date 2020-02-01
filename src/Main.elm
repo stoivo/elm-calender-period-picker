@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg(..), init, main, update, view)
+port module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
 import Html exposing (Html, button, div, h1, img, p, text)
@@ -287,7 +287,7 @@ toStringFromTime time =
         ++ "-"
         ++ (Time.toMonth utc time |> toDanishMonth)
         ++ "-"
-        ++ (Time.toDay utc time |> String.fromInt)
+        ++ (Time.toDay utc time |> String.fromInt |> (++) "0" |> String.right 2)
 
 
 toNumishMonth : Time.Month -> Int
@@ -384,13 +384,23 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Pick newpicked ->
-            ( { model | picked = Just newpicked }, Cmd.none )
+            ( { model | picked = Just newpicked }
+            , Cmd.batch
+                [ emitSelected
+                    { start = newpicked |> getStartDate |> toStringFromTime
+                    , end = newpicked |> getEndDate |> toStringFromTime
+                    }
+                ]
+            )
 
         NoOp ->
             ( model, Cmd.none )
 
         UnPick ->
             ( { model | picked = Nothing }, Cmd.none )
+
+
+port emitSelected : { end : String, start : String } -> Cmd msg
 
 
 
