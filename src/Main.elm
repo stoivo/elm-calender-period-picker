@@ -18,6 +18,15 @@ import Time.Extra
 type alias InitFlags =
     { from : Time.Posix
     , to : Time.Posix
+    , config : DisplaySettings
+    }
+
+
+type alias DisplaySettings =
+    { showYear : Bool
+    , showQuater : Bool
+    , showTermin : Bool
+    , showMonth : Bool
     }
 
 
@@ -54,6 +63,7 @@ type alias Model =
     { picked : Maybe RowType
     , first_date : Time.Posix
     , last_date : Time.Posix
+    , config : DisplaySettings
     }
 
 
@@ -144,16 +154,40 @@ calPeriodsInPeriodRec first last agg =
 init : Json.Value -> ( Model, Cmd Msg )
 init input =
     let
+        decoderDisplay =
+            Json.map4 DisplaySettings
+                (Json.field "showYear" Json.bool
+                    |> Json.maybe
+                    |> Json.map (Maybe.withDefault False)
+                )
+                (Json.field "showQuater" Json.bool
+                    |> Json.maybe
+                    |> Json.map (Maybe.withDefault False)
+                )
+                (Json.field "showTermin" Json.bool
+                    |> Json.maybe
+                    |> Json.map (Maybe.withDefault False)
+                )
+                (Json.field "showMonth" Json.bool
+                    |> Json.maybe
+                    |> Json.map (Maybe.withDefault False)
+                )
+
         decoder =
-            Json.map2 InitFlags
+            Json.map3 InitFlags
                 (Json.field "from" (Json.int |> Json.map Time.millisToPosix))
                 (Json.field "to" (Json.int |> Json.map Time.millisToPosix))
+                (Json.field "config" decoderDisplay
+                    |> Json.maybe
+                    |> Json.map (Maybe.withDefault (DisplaySettings True True True True))
+                )
     in
     case Json.decodeValue decoder input of
         Ok flags ->
             ( { picked = Nothing
               , first_date = flags.from
               , last_date = flags.to
+              , config = flags.config
               }
             , Cmd.none
             )
@@ -162,6 +196,7 @@ init input =
             ( { picked = Nothing
               , first_date = Time.millisToPosix 1564617600000
               , last_date = Time.millisToPosix 1564617600000
+              , config = DisplaySettings True True True True
               }
             , Cmd.none
             )
@@ -355,12 +390,40 @@ view model =
 
 printTheShit : Model -> Int -> Html Msg
 printTheShit model year =
+    let
+        htmlYear =
+            if model.config.showYear then
+                printYear model.picked year |> Just
+
+            else
+                Nothing
+
+        htmlQuater =
+            if model.config.showQuater then
+                printQuaters (calQuaterInPeriod model.first_date model.last_date) model.picked year |> Just
+
+            else
+                Nothing
+
+        htmlTermin =
+            if model.config.showTermin then
+                printTermins (calTerminInPeriod model.first_date model.last_date) model.picked year |> Just
+
+            else
+                Nothing
+
+        htmlMonth =
+            if model.config.showMonth then
+                printMonths (calPeriodsInPeriod model.first_date model.last_date) model.picked year |> Just
+
+            else
+                Nothing
+
+        prints =
+            [ htmlYear, htmlQuater, htmlTermin, htmlMonth ]
+    in
     div [ class "calender" ]
-        [ printYear model.picked year
-        , printQuaters (calQuaterInPeriod model.first_date model.last_date) model.picked year
-        , printTermins (calTerminInPeriod model.first_date model.last_date) model.picked year
-        , printMonths (calPeriodsInPeriod model.first_date model.last_date) model.picked year
-        ]
+        (List.filterMap (\x -> x) prints)
 
 
 printYear : Maybe RowType -> Int -> Html Msg

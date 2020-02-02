@@ -17,7 +17,15 @@ elmWebComponents.register('elm-period-picker', Elm.Main, {
     };
     const from = maybeToday(flags.from).getTime();
     const to = maybeToday(flags.to).getTime();
-    return Object.assign({}, flags, { from, to });
+    console.log(flags.config)
+    let config;
+    if (!!flags.config) {
+      config = JSON.parse(flags.config)
+      return Object.assign({}, flags, { from, to, config });
+    } else {
+      return Object.assign({}, flags, { from, to });
+    }
+  ;
   },
 })
 
