@@ -187,38 +187,58 @@ getStartDate row =
             toDate pp.year pp.month 1
 
 
-getEndDate : RowType -> Time.Posix
-getEndDate row =
+rowTypeYear : RowType -> Int
+rowTypeYear row =
     case row of
         MyYear pp ->
-            toLatestDateInMonth pp.year 12
+            pp.year
 
         MyQuater pp ->
-            toLatestDateInMonth pp.year (pp.quater * 3)
+            pp.year
 
         MyTermin pp ->
-            toLatestDateInMonth pp.year (pp.termin * 2)
+            pp.year
 
         MyPeriod pp ->
-            toLatestDateInMonth pp.year pp.month
+            pp.year
+
+
+getEndDate : RowType -> Time.Posix
+getEndDate row =
+    let
+        month =
+            case row of
+                MyYear pp ->
+                    12
+
+                MyQuater pp ->
+                    pp.quater * 3
+
+                MyTermin pp ->
+                    pp.termin * 2
+
+                MyPeriod pp ->
+                    pp.month
+
+        basefx =
+            toDate (rowTypeYear row)
+    in
+    case month of
+        12 ->
+            basefx month 31
+
+        _ ->
+            basefx (month + 1) 0
 
 
 toDate : Int -> Int -> Int -> Time.Posix
 toDate year month day =
     let
         month_str =
-            if month < 10 then
-                String.fromInt month |> (\x -> "0" ++ x)
-
-            else
-                String.fromInt month
+            month |> String.fromInt |> (++) "0" |> String.right 2
 
         day_str =
-            if day < 10 then
-                String.fromInt day |> (\x -> "0" ++ x)
-
-            else
-                String.fromInt day
+            day |> String.fromInt |> (++) "0" |> String.right 2
 
         string =
             String.fromInt year
@@ -233,58 +253,11 @@ toDate year month day =
         |> Result.withDefault (Time.millisToPosix 100000)
 
 
-toLatestDateInMonth : Int -> Int -> Time.Posix
-toLatestDateInMonth year month =
-    let
-        day =
-            case month of
-                1 ->
-                    31
-
-                2 ->
-                    28
-
-                3 ->
-                    31
-
-                4 ->
-                    30
-
-                5 ->
-                    31
-
-                6 ->
-                    30
-
-                7 ->
-                    31
-
-                8 ->
-                    31
-
-                9 ->
-                    30
-
-                10 ->
-                    31
-
-                11 ->
-                    30
-
-                12 ->
-                    31
-
-                _ ->
-                    5
-    in
-    toDate year month day
-
-
 toStringFromTime : Time.Posix -> String
 toStringFromTime time =
     (Time.toYear utc time |> String.fromInt)
         ++ "-"
-        ++ (Time.toMonth utc time |> toDanishMonth)
+        ++ (Time.toMonth utc time |> toNumishMonth |> String.fromInt |> (++) "0" |> String.right 2)
         ++ "-"
         ++ (Time.toDay utc time |> String.fromInt |> (++) "0" |> String.right 2)
 
@@ -327,46 +300,6 @@ toNumishMonth month =
 
         Time.Dec ->
             12
-
-
-toDanishMonth : Time.Month -> String
-toDanishMonth month =
-    case month of
-        Time.Jan ->
-            "01"
-
-        Time.Feb ->
-            "02"
-
-        Time.Mar ->
-            "03"
-
-        Time.Apr ->
-            "04"
-
-        Time.May ->
-            "05"
-
-        Time.Jun ->
-            "06"
-
-        Time.Jul ->
-            "07"
-
-        Time.Aug ->
-            "08"
-
-        Time.Sep ->
-            "09"
-
-        Time.Oct ->
-            "10"
-
-        Time.Nov ->
-            "11"
-
-        Time.Dec ->
-            "12"
 
 
 
@@ -426,10 +359,10 @@ printTheShit : Model -> Int -> Html Msg
 printTheShit model year =
     div [ class "calender" ]
         [ printStartAndEnd model
-        , printYear year
-        , printQuaters (calQuaterInPeriod model.first_date model.last_date) year
-        , printTermins (calTerminInPeriod model.first_date model.last_date) year
-        , printMonths (calPeriodsInPeriod model.first_date model.last_date) year
+        , printYear model.picked year
+        , printQuaters (calQuaterInPeriod model.first_date model.last_date) model.picked year
+        , printTermins (calTerminInPeriod model.first_date model.last_date) model.picked year
+        , printMonths (calPeriodsInPeriod model.first_date model.last_date) model.picked year
         ]
 
 
@@ -442,65 +375,82 @@ printStartAndEnd model =
         ]
 
 
-printYear : Int -> Html Msg
-printYear year =
+printYear : Maybe RowType -> Int -> Html Msg
+printYear selected year =
     div [ class "calender-rows" ]
         [ viewPrintBlock
             (MyYear { year = year })
+            selected
             True
             (String.fromInt year)
         ]
 
 
-printQuaters : List CalQuater -> Int -> Html Msg
-printQuaters list year =
+printQuaters : List CalQuater -> Maybe RowType -> Int -> Html Msg
+printQuaters list selected year =
     div [ class "calender-rows" ]
         (List.range 1 4
             |> List.map
                 (\int ->
                     viewPrintBlock
                         (MyQuater { year = year, quater = int })
+                        selected
                         (List.any (\x -> x.year == year && x.quater == int) list)
                         ("q" ++ String.fromInt int)
                 )
         )
 
 
-printTermins : List CalTermin -> Int -> Html Msg
-printTermins list year =
+printTermins : List CalTermin -> Maybe RowType -> Int -> Html Msg
+printTermins list selected year =
     div [ class "calender-rows" ]
         (List.range 1 6
             |> List.map
                 (\int ->
                     viewPrintBlock
                         (MyTermin { year = year, termin = int })
+                        selected
                         (List.any (\x -> x.year == year && x.termin == int) list)
                         ("t" ++ String.fromInt int)
                 )
         )
 
 
-printMonths : List CalPeriod -> Int -> Html Msg
-printMonths list year =
+printMonths : List CalPeriod -> Maybe RowType -> Int -> Html Msg
+printMonths list selected year =
     div [ class "calender-rows" ]
         (List.range 1 12
             |> List.map
                 (\mnd ->
                     viewPrintBlock
                         (MyPeriod { year = year, month = mnd })
+                        selected
                         (List.any (\x -> x.year == year && x.month == mnd) list)
                         ("m" ++ String.fromInt mnd)
                 )
         )
 
 
-viewPrintBlock : RowType -> Bool -> String -> Html Msg
-viewPrintBlock row enabled teext =
+viewPrintBlock : RowType -> Maybe RowType -> Bool -> String -> Html Msg
+viewPrintBlock row selected enabled teext =
     case enabled of
         True ->
-            div [ class "calender-rows-unit" ]
-                [ button [ onClick (Pick row) ] [ text teext ]
-                ]
+            case selected of
+                Just picked ->
+                    if picked == row then
+                        div [ class "calender-rows-unit" ]
+                            [ button [ onClick (Pick row), class "elm-period-picker-selected" ] [ text teext ]
+                            ]
+
+                    else
+                        div [ class "calender-rows-unit" ]
+                            [ button [ onClick (Pick row) ] [ text teext ]
+                            ]
+
+                Nothing ->
+                    div [ class "calender-rows-unit" ]
+                        [ button [ onClick (Pick row) ] [ text teext ]
+                        ]
 
         False ->
             div [ class "calender-rows-unit" ]
