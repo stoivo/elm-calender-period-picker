@@ -317,22 +317,23 @@ update msg model =
     case msg of
         Pick newpicked ->
             ( { model | picked = Just newpicked }
-            , Cmd.batch
-                [ emitSelected
-                    { start = newpicked |> getStartDate |> toStringFromTime
-                    , end = newpicked |> getEndDate |> toStringFromTime
-                    }
-                ]
+            , emitSelected
+                { start = newpicked |> getStartDate |> toStringFromTime
+                , end = newpicked |> getEndDate |> toStringFromTime
+                }
             )
 
         NoOp ->
             ( model, Cmd.none )
 
         UnPick ->
-            ( { model | picked = Nothing }, Cmd.none )
+            ( { model | picked = Nothing }, emitUnpicked () )
 
 
 port emitSelected : { end : String, start : String } -> Cmd msg
+
+
+port emitUnpicked : () -> Cmd msg
 
 
 
@@ -342,10 +343,7 @@ port emitSelected : { end : String, start : String } -> Cmd msg
 view : Model -> Html Msg
 view model =
     div []
-        [ mRowView model.picked
-        , mRowBeginningView model.picked
-        , mRowEndView model.picked
-        , button [ onClick UnPick ] [ text "unpick" ]
+        [ button [ onClick UnPick ] [ text "unpick" ]
         , div [ class "calenders" ]
             (List.range
                 (model.first_date |> Time.toYear utc)
@@ -358,20 +356,10 @@ view model =
 printTheShit : Model -> Int -> Html Msg
 printTheShit model year =
     div [ class "calender" ]
-        [ printStartAndEnd model
-        , printYear model.picked year
+        [ printYear model.picked year
         , printQuaters (calQuaterInPeriod model.first_date model.last_date) model.picked year
         , printTermins (calTerminInPeriod model.first_date model.last_date) model.picked year
         , printMonths (calPeriodsInPeriod model.first_date model.last_date) model.picked year
-        ]
-
-
-printStartAndEnd : Model -> Html Msg
-printStartAndEnd model =
-    div [ class "calender-rows" ]
-        [ div
-            [ class "calender-rows-unit" ]
-            [ (toStringFromTime model.first_date ++ " to " ++ toStringFromTime model.last_date) |> text ]
         ]
 
 
@@ -456,45 +444,6 @@ viewPrintBlock row selected enabled teext =
             div [ class "calender-rows-unit" ]
                 [ button [ disabled True ] [ text teext ]
                 ]
-
-
-mRowView : Maybe RowType -> Html Msg
-mRowView row =
-    case row of
-        Just (MyYear pp) ->
-            p [] [ pp.year |> String.fromInt |> text ]
-
-        Just (MyQuater pp) ->
-            p [] [ text (String.fromInt pp.year ++ " Q" ++ String.fromInt pp.quater) ]
-
-        Just (MyTermin pp) ->
-            p [] [ text (String.fromInt pp.year ++ " T" ++ String.fromInt pp.termin) ]
-
-        Just (MyPeriod pp) ->
-            p [] [ text (String.fromInt pp.year ++ "-" ++ String.fromInt pp.month ++ "-01") ]
-
-        Nothing ->
-            p [] [ text "Nothing" ]
-
-
-mRowBeginningView : Maybe RowType -> Html Msg
-mRowBeginningView row =
-    case row of
-        Just x ->
-            p [] [ getStartDate x |> toStringFromTime |> text ]
-
-        Nothing ->
-            p [] [ text "Nothing" ]
-
-
-mRowEndView : Maybe RowType -> Html Msg
-mRowEndView row =
-    case row of
-        Just x ->
-            p [] [ getEndDate x |> toStringFromTime |> text ]
-
-        Nothing ->
-            p [] [ text "Nothing" ]
 
 
 

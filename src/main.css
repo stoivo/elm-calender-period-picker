@@ -62,7 +62,7 @@ body {
 }
 
 .elm-period-picker-selected {
-  background: azure;
+  background: blueviolet;
 }
 
 button:disabled,

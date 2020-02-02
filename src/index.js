@@ -24,7 +24,7 @@ elmWebComponents.register('elm-period-picker', Elm.Main, {
 document
   .getElementById('w420')
   .getElementsByTagName('elm-period-picker')[0]
-  .addEventListener("emitSelected", function(portData, ev) {
+  .addEventListener("emitSelected", function(portData) {
     console.log("fucking awsome ", portData.detail)
   }
 )
@@ -32,14 +32,14 @@ document
 document
   .getElementById('w1420')
   .getElementsByTagName('elm-period-picker')[0]
-  .addEventListener("emitSelected", function(portData, ev) {
+  .addEventListener("emitSelected", function(portData) {
     console.log("fucking awsome ", portData.detail)
   }
 )
 document
   .getElementById('today')
   .getElementsByTagName('elm-period-picker')[0]
-  .addEventListener("emitSelected", function(portData, ev) {
+  .addEventListener("emitSelected", function(portData) {
     console.log("fucking awsome ", portData.detail)
   }
 )
