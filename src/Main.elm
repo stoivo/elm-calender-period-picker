@@ -23,7 +23,8 @@ type alias InitFlags =
 
 
 type alias DisplaySettings =
-    { showYear : Bool
+    { showUnpick : Bool
+    , showYear : Bool
     , showQuater : Bool
     , showTermin : Bool
     , showMonth : Bool
@@ -155,7 +156,11 @@ init : Json.Value -> ( Model, Cmd Msg )
 init input =
     let
         decoderDisplay =
-            Json.map4 DisplaySettings
+            Json.map5 DisplaySettings
+                (Json.field "showUnpick" Json.bool
+                    |> Json.maybe
+                    |> Json.map (Maybe.withDefault False)
+                )
                 (Json.field "showYear" Json.bool
                     |> Json.maybe
                     |> Json.map (Maybe.withDefault False)
@@ -179,7 +184,7 @@ init input =
                 (Json.field "to" (Json.int |> Json.map Time.millisToPosix))
                 (Json.field "config" decoderDisplay
                     |> Json.maybe
-                    |> Json.map (Maybe.withDefault (DisplaySettings True True True True))
+                    |> Json.map (Maybe.withDefault (DisplaySettings True True True True True))
                 )
     in
     case Json.decodeValue decoder input of
@@ -196,7 +201,7 @@ init input =
             ( { picked = Nothing
               , first_date = Time.millisToPosix 1564617600000
               , last_date = Time.millisToPosix 1564617600000
-              , config = DisplaySettings True True True True
+              , config = DisplaySettings True True True True True
               }
             , Cmd.none
             )
@@ -377,15 +382,20 @@ port emitUnpicked : () -> Cmd msg
 
 view : Model -> Html Msg
 view model =
-    div []
-        [ button [ onClick UnPick ] [ text "unpick" ]
-        , div [ class "calenders" ]
-            (List.range
-                (model.first_date |> Time.toYear utc)
-                (model.last_date |> Time.toYear utc)
-                |> List.map (printTheShit model)
-            )
-        ]
+    let
+        calenders =
+            div [ class "calenders" ]
+                (List.range
+                    (model.first_date |> Time.toYear utc)
+                    (model.last_date |> Time.toYear utc)
+                    |> List.map (printTheShit model)
+                )
+    in
+    if model.config.showUnpick then
+        div [] [ button [ onClick UnPick ] [ text "unpick" ], calenders ]
+
+    else
+        div [] [ calenders ]
 
 
 printTheShit : Model -> Int -> Html Msg
@@ -447,7 +457,7 @@ printQuaters list selected year =
                         (MyQuater { year = year, quater = int })
                         selected
                         (List.any (\x -> x.year == year && x.quater == int) list)
-                        ("q" ++ String.fromInt int)
+                        ("Q " ++ String.fromInt int)
                 )
         )
 
@@ -462,7 +472,7 @@ printTermins list selected year =
                         (MyTermin { year = year, termin = int })
                         selected
                         (List.any (\x -> x.year == year && x.termin == int) list)
-                        ("t" ++ String.fromInt int)
+                        ("T " ++ String.fromInt int)
                 )
         )
 
@@ -477,9 +487,52 @@ printMonths list selected year =
                         (MyPeriod { year = year, month = mnd })
                         selected
                         (List.any (\x -> x.year == year && x.month == mnd) list)
-                        ("m" ++ String.fromInt mnd)
+                        (monthToStr mnd)
                 )
         )
+
+
+monthToStr : Int -> String
+monthToStr month =
+    case month of
+        1 ->
+            "Jan"
+
+        2 ->
+            "Feb"
+
+        3 ->
+            "Mar"
+
+        4 ->
+            "Apr"
+
+        5 ->
+            "Mai"
+
+        6 ->
+            "Jun"
+
+        7 ->
+            "Jul"
+
+        8 ->
+            "Aug"
+
+        9 ->
+            "Sep"
+
+        10 ->
+            "Okt"
+
+        11 ->
+            "Nov"
+
+        12 ->
+            "Dev"
+
+        _ ->
+            "-"
 
 
 viewPrintBlock : RowType -> Maybe RowType -> Bool -> String -> Html Msg

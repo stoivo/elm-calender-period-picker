@@ -16,11 +16,10 @@ body {
   color: #293c4b;
 }
 
-.view-into-calender {
-  width: 600px;
-}
 
-.calenders{
+
+/* Structure */
+.calenders {
   overflow-x: auto;
   overflow-y: hidden;
   display: flex;
@@ -51,22 +50,72 @@ body {
   min-height: 33px;
 }
 
-.calender-rows-unit > button {
+.calenders button {
   width: 100%;
   height: 100%;
 }
 
 /* custom */
-.calender-rows-unit {
+.default .calender-rows-unit {
   border: solid black 1px;
 }
 
-.elm-period-picker-selected {
+.default .elm-period-picker-selected {
   background: blueviolet;
 }
 
-button:disabled,
-button[disabled]{
+.default button:disabled,
+.default button[disabled] {
   background-color: tomato;
   color: blue;
+}
+
+/* coluer full */
+.coluerfull button {
+  box-shadow: 0px 10px 14px -7px #276873;
+  background:linear-gradient(to bottom, #599bb3 5%, #408c99 100%);
+  background-color:#599bb3;
+  border-radius:8px;
+  display:inline-block;
+  cursor:pointer;
+  color:#ffffff;
+  font-family:Arial;
+  font-size:15px;
+  font-weight:bold;
+  padding:10px 21px;
+  text-decoration:none;
+  text-shadow:1px 3px 0px #3d768a;
+}
+.coluerfull button:hover {
+  background:linear-gradient(to bottom, #408c99 5%, #599bb3 100%);
+  background-color:#408c99;
+}
+
+/* flat */
+.flat button {
+  color: #494949 !important;
+  text-decoration: none;
+  background: #ffffff;
+  padding: 5px 9px;
+  border: 3px solid #494949 !important;
+  display: inline-block;
+  transition: all 0.4s ease 0s;
+}
+.flat button:hover {
+  color: #ffffff !important;
+  background: #f6b93b;
+  border-color: #f6b93b !important;
+  transition: all 0.4s ease 0s;
+}
+.flat .elm-period-picker-selected {
+  color: #ffffff !important;
+  background: #e2ad44;
+  border-color: #e2ad44 !important;
+  transition: all 0.4s ease 0s;
+}
+.flat button:disabled {
+  color: #ffffff !important;
+  background: #00000030;
+  border-color: #00000030 !important;
+  transition: all 0.4s ease 0s;
 }

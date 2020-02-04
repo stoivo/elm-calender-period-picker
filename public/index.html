@@ -19,21 +19,33 @@
     </noscript>
 
 
-    <div id="w420" style="width: 420px">
+    <div class="coluerfull" id="w420" style="width: 420px">
+      COLUERFULL
+      <elm-period-picker from="2018-01-01"></elm-period-picker>
+    </div>
+
+    <div class="flat" id="w420" style="width: 1420px">
+      FLAT
+      <elm-period-picker from="2018-01-01" config='{"showYear": true,"showQuater": true,"showTermin": true,"showMonth": true}'></elm-period-picker>
+    </div>
+
+    <hr />
+
+    <div class="default" id="w420" style="width: 420px">
       Width : 420px
       <elm-period-picker from="2018-01-01"></elm-period-picker>
     </div>
 
     <hr />
 
-    <div id="w1420" style="width: 1420px">
+    <div class="default" id="w1420" style="width: 1420px">
       Width : 1420px
       <elm-period-picker from="2018-01-01"></elm-period-picker>
     </div>
 
     <hr />
 
-    <div id="today" style="width: 1050px">
+    <div class="default" id="today" style="width: 1050px">
       Todie or Today
       <elm-period-picker config='{"showYear": true,"showTermin": true}'></elm-period-picker>
     </div>
