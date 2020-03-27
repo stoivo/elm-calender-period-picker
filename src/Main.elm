@@ -47,7 +47,7 @@ type alias CalTermin =
     }
 
 
-type alias CalPeriod =
+type alias CalMonth =
     { year : Int
     , month : Int
     }
@@ -57,7 +57,7 @@ type RowType
     = MyYear CalYear
     | MyQuater CalQuater
     | MyTermin CalTermin
-    | MyPeriod CalPeriod
+    | MyPeriod CalMonth
 
 
 type alias Model =
@@ -135,25 +135,25 @@ calTerminInPeriodRec first last agg =
             )
 
 
-calPeriodsInPeriod : Time.Posix -> Time.Posix -> List CalPeriod
-calPeriodsInPeriod first last =
-    calPeriodsInPeriodRec first last []
+calMonthsInPeriod : Time.Posix -> Time.Posix -> List CalMonth
+calMonthsInPeriod first last =
+    calMonthsInPeriodRec first last []
 
 
-calPeriodsInPeriodRec : Time.Posix -> Time.Posix -> List CalPeriod -> List CalPeriod
-calPeriodsInPeriodRec first last agg =
+calMonthsInPeriodRec : Time.Posix -> Time.Posix -> List CalMonth -> List CalMonth
+calMonthsInPeriodRec first last agg =
     if Time.posixToMillis last < Time.posixToMillis first then
         agg
 
     else
-        calPeriodsInPeriodRec
+        calMonthsInPeriodRec
             (Time.Extra.add Time.Extra.Month 1 utc first)
             last
             ({ year = Time.toYear utc first, month = Time.toMonth utc first |> toNumishMonth } :: agg)
 
 
-init : Json.Value -> ( Model, Cmd Msg )
-init input =
+initDecoder : Json.Decoder InitFlags
+initDecoder =
     let
         decoderDisplay =
             Json.map5 DisplaySettings
@@ -177,17 +177,19 @@ init input =
                     |> Json.maybe
                     |> Json.map (Maybe.withDefault False)
                 )
-
-        decoder =
-            Json.map3 InitFlags
-                (Json.field "from" (Json.int |> Json.map Time.millisToPosix))
-                (Json.field "to" (Json.int |> Json.map Time.millisToPosix))
-                (Json.field "config" decoderDisplay
-                    |> Json.maybe
-                    |> Json.map (Maybe.withDefault (DisplaySettings True True True True True))
-                )
     in
-    case Json.decodeValue decoder input of
+    Json.map3 InitFlags
+        (Json.field "from" (Json.int |> Json.map Time.millisToPosix))
+        (Json.field "to" (Json.int |> Json.map Time.millisToPosix))
+        (Json.field "config" decoderDisplay
+            |> Json.maybe
+            |> Json.map (Maybe.withDefault (DisplaySettings True True True True True))
+        )
+
+
+init : Json.Value -> ( Model, Cmd Msg )
+init input =
+    case Json.decodeValue initDecoder input of
         Ok flags ->
             ( { picked = Nothing
               , first_date = flags.from
@@ -260,15 +262,15 @@ getEndDate row =
                 MyPeriod pp ->
                     pp.month
 
-        basefx =
+        year =
             toDate (rowTypeYear row)
     in
     case month of
         12 ->
-            basefx month 31
+            year month 31
 
         _ ->
-            basefx (month + 1) 0
+            year (month + 1) 0
 
 
 toDate : Int -> Int -> Int -> Time.Posix
@@ -295,7 +297,8 @@ toDate year month day =
 
 toStringFromTime : Time.Posix -> String
 toStringFromTime time =
-    (Time.toYear utc time |> String.fromInt)
+    ""
+        ++ (Time.toYear utc time |> String.fromInt)
         ++ "-"
         ++ (Time.toMonth utc time |> toNumishMonth |> String.fromInt |> (++) "0" |> String.right 2)
         ++ "-"
@@ -388,7 +391,7 @@ view model =
                 (List.range
                     (model.first_date |> Time.toYear utc)
                     (model.last_date |> Time.toYear utc)
-                    |> List.map (printTheShit model)
+                    |> List.map (viewCalender model)
                 )
     in
     if model.config.showUnpick then
@@ -398,33 +401,33 @@ view model =
         div [] [ calenders ]
 
 
-printTheShit : Model -> Int -> Html Msg
-printTheShit model year =
+viewCalender : Model -> Int -> Html Msg
+viewCalender model year =
     let
         htmlYear =
             if model.config.showYear then
-                printYear model.picked year |> Just
+                Just <| viewYear model.picked year
 
             else
                 Nothing
 
         htmlQuater =
             if model.config.showQuater then
-                printQuaters (calQuaterInPeriod model.first_date model.last_date) model.picked year |> Just
+                Just <| viewQuaters (calQuaterInPeriod model.first_date model.last_date) model.picked year
 
             else
                 Nothing
 
         htmlTermin =
             if model.config.showTermin then
-                printTermins (calTerminInPeriod model.first_date model.last_date) model.picked year |> Just
+                Just <| viewTermins (calTerminInPeriod model.first_date model.last_date) model.picked year
 
             else
                 Nothing
 
         htmlMonth =
             if model.config.showMonth then
-                printMonths (calPeriodsInPeriod model.first_date model.last_date) model.picked year |> Just
+                Just <| viewMonths (calMonthsInPeriod model.first_date model.last_date) model.picked year
 
             else
                 Nothing
@@ -436,8 +439,8 @@ printTheShit model year =
         (List.filterMap (\x -> x) prints)
 
 
-printYear : Maybe RowType -> Int -> Html Msg
-printYear selected year =
+viewYear : Maybe RowType -> Int -> Html Msg
+viewYear selected year =
     div [ class "calender-rows" ]
         [ viewPrintBlock
             (MyYear { year = year })
@@ -447,49 +450,49 @@ printYear selected year =
         ]
 
 
-printQuaters : List CalQuater -> Maybe RowType -> Int -> Html Msg
-printQuaters list selected year =
+viewQuaters : List CalQuater -> Maybe RowType -> Int -> Html Msg
+viewQuaters list selected year =
+    let
+        view_ =
+            \int ->
+                viewPrintBlock
+                    (MyQuater { year = year, quater = int })
+                    selected
+                    (List.any (\x -> x.year == year && x.quater == int) list)
+                    ("Q " ++ String.fromInt int)
+    in
     div [ class "calender-rows" ]
-        (List.range 1 4
-            |> List.map
-                (\int ->
-                    viewPrintBlock
-                        (MyQuater { year = year, quater = int })
-                        selected
-                        (List.any (\x -> x.year == year && x.quater == int) list)
-                        ("Q " ++ String.fromInt int)
-                )
-        )
+        (List.map view_ (List.range 1 4))
 
 
-printTermins : List CalTermin -> Maybe RowType -> Int -> Html Msg
-printTermins list selected year =
+viewTermins : List CalTermin -> Maybe RowType -> Int -> Html Msg
+viewTermins list selected year =
+    let
+        view_ =
+            \int ->
+                viewPrintBlock
+                    (MyTermin { year = year, termin = int })
+                    selected
+                    (List.any (\x -> x.year == year && x.termin == int) list)
+                    ("T " ++ String.fromInt int)
+    in
     div [ class "calender-rows" ]
-        (List.range 1 6
-            |> List.map
-                (\int ->
-                    viewPrintBlock
-                        (MyTermin { year = year, termin = int })
-                        selected
-                        (List.any (\x -> x.year == year && x.termin == int) list)
-                        ("T " ++ String.fromInt int)
-                )
-        )
+        (List.map view_ (List.range 1 6))
 
 
-printMonths : List CalPeriod -> Maybe RowType -> Int -> Html Msg
-printMonths list selected year =
+viewMonths : List CalMonth -> Maybe RowType -> Int -> Html Msg
+viewMonths list selected year =
+    let
+        view_ =
+            \month ->
+                viewPrintBlock
+                    (MyPeriod { year = year, month = month })
+                    selected
+                    (List.any (\x -> x.year == year && x.month == month) list)
+                    (monthToStr month)
+    in
     div [ class "calender-rows" ]
-        (List.range 1 12
-            |> List.map
-                (\mnd ->
-                    viewPrintBlock
-                        (MyPeriod { year = year, month = mnd })
-                        selected
-                        (List.any (\x -> x.year == year && x.month == mnd) list)
-                        (monthToStr mnd)
-                )
-        )
+        (List.map view_ (List.range 1 12))
 
 
 monthToStr : Int -> String
@@ -536,29 +539,22 @@ monthToStr month =
 
 
 viewPrintBlock : RowType -> Maybe RowType -> Bool -> String -> Html Msg
-viewPrintBlock row selected enabled teext =
+viewPrintBlock row selected enabled body =
     case enabled of
         True ->
-            case selected of
-                Just picked ->
-                    if picked == row then
-                        div [ class "calender-rows-unit" ]
-                            [ button [ onClick (Pick row), class "elm-period-picker-selected" ] [ text teext ]
-                            ]
+            if selected == Just row then
+                div [ class "calender-rows-unit" ]
+                    [ button [ onClick (Pick row), class "elm-period-picker-selected" ] [ text body ]
+                    ]
 
-                    else
-                        div [ class "calender-rows-unit" ]
-                            [ button [ onClick (Pick row) ] [ text teext ]
-                            ]
-
-                Nothing ->
-                    div [ class "calender-rows-unit" ]
-                        [ button [ onClick (Pick row) ] [ text teext ]
-                        ]
+            else
+                div [ class "calender-rows-unit" ]
+                    [ button [ onClick (Pick row) ] [ text body ]
+                    ]
 
         False ->
             div [ class "calender-rows-unit" ]
-                [ button [ disabled True ] [ text teext ]
+                [ button [ disabled True ] [ text body ]
                 ]
 
 
