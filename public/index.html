@@ -19,35 +19,35 @@
     </noscript>
 
 
-    <div class="coluerfull" id="w420" style="width: 420px">
+    <div id="w420" style="width: 420px">
       COLUERFULL
-      <elm-period-picker from="2018-01-01"></elm-period-picker>
+      <elm-period-picker-coluerfull from="2018-01-01"></elm-period-picker-coluerfull>
     </div>
 
-    <div class="flat" id="w420" style="width: 1420px">
+    <div class="" id="w420" style="width: 1420px">
       FLAT
-      <elm-period-picker from="2018-01-01" config='{"showYear": true,"showQuater": true,"showTermin": true,"showMonth": true}'></elm-period-picker>
+      <elm-period-picker-flat from="2018-01-01" config='{"showYear": true,"showQuater": true,"showTermin": true,"showMonth": true}'></elm-period-picker-flat>
     </div>
 
     <hr />
 
-    <div class="default" id="w420" style="width: 420px">
+    <div class="" id="w420" style="width: 420px">
       Width : 420px
-      <elm-period-picker from="2018-01-01"></elm-period-picker>
+      <elm-period-picker-default from="2018-01-01" on-emit-selected="console.log('Boris <3', event.details)"></elm-period-picker-default>
     </div>
 
     <hr />
 
-    <div class="default" id="w1420" style="width: 1420px">
+    <div class="" id="w1420" style="width: 1420px">
       Width : 1420px
-      <elm-period-picker from="2018-01-01"></elm-period-picker>
+      <elm-period-picker-default from="2018-01-01"></elm-period-picker-default>
     </div>
 
     <hr />
 
-    <div class="default" id="today" style="width: 1050px">
+    <div class="" id="today" style="width: 1050px">
       Todie or Today
-      <elm-period-picker config='{"showYear": true,"showTermin": true}'></elm-period-picker>
+      <elm-period-picker-default config='{"showYear": true,"showTermin": true}'></elm-period-picker-default>
     </div>
 </body>
 </html>

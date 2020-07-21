@@ -1,0 +1,14 @@
+/* custom */
+.calender-rows-unit {
+  border: solid black 1px;
+}
+
+.elm-period-picker-selected {
+  background: blueviolet;
+}
+
+button:disabled,
+button[disabled] {
+  background-color: tomato;
+  color: blue;
+}

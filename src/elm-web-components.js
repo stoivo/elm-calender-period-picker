@@ -33,6 +33,7 @@ const elmWebComponents = {
       mapFlags = flags => flags,
       onSetupError,
       useShadowDom = false,
+      shadowCss = '',
     } = {}
   ) {
     class ElmElement extends HTMLElement {
@@ -55,6 +56,10 @@ const elmWebComponents = {
           const elmDiv = document.createElement('div')
           parentDiv.innerHTML = ''
           parentDiv.appendChild(elmDiv)
+
+          const styleTag = document.createElement('style')
+          styleTag.innerHTML = shadowCss;
+          parentDiv.appendChild(styleTag)
 
           const elmElement = ElmComponent.init({
             flags,

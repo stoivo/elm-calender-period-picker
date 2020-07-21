@@ -1,0 +1,28 @@
+/* flat */
+button {
+  color: #494949 !important;
+  text-decoration: none;
+  background: #ffffff;
+  padding: 5px 9px;
+  border: 3px solid #494949 !important;
+  display: inline-block;
+  transition: all 0.4s ease 0s;
+}
+button:hover {
+  color: #ffffff !important;
+  background: #f6b93b;
+  border-color: #f6b93b !important;
+  transition: all 0.4s ease 0s;
+}
+.elm-period-picker-selected {
+  color: #ffffff !important;
+  background: #e2ad44;
+  border-color: #e2ad44 !important;
+  transition: all 0.4s ease 0s;
+}
+button:disabled {
+  color: #ffffff !important;
+  background: #00000030;
+  border-color: #00000030 !important;
+  transition: all 0.4s ease 0s;
+}
