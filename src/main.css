@@ -16,14 +16,13 @@ body {
   color: #293c4b;
 }
 
-
-
 /* Structure */
 .calenders {
   overflow-x: auto;
-  overflow-y: hidden;
+  overflow-y: scroll;
   display: flex;
-  flex-direction: row
+  flex-direction: row;
+  scrollbar-width: none;
 }
 
 .calender {

@@ -11,7 +11,7 @@ let cssDefault = require('!!to-string-loader!css-loader!./default.css')
 function registerVariant(name, css) {
   elmWebComponents.register('elm-period-picker-'+name, Elm.Main, {
     shadowCss: cssBase + css,
-    useShadowDom: true,
+    useShadowDom: false,
     setupPorts: ports => {
       ports.emitSelected.subscribe(function(data) {
         console.dir('demo', data);
@@ -41,29 +41,33 @@ registerVariant('flat', cssFlat);
 registerVariant('coluerfull', cssColorfull);
 registerVariant('default', cssDefault);
 
-document
+window.picker = document
   .getElementById('w420')
-  .getElementsByTagName('elm-period-picker-coluerfull')[0]
-  .addEventListener("emitSelected", function(portData) {
-    console.log("fucking awsome ", portData.detail)
-  }
-)
-
-document
-  .getElementById('w1420')
   .getElementsByTagName('elm-period-picker-default')[0]
-  .addEventListener("emitSelected", function(portData) {
-    console.log("fucking awsome ", portData.detail)
-  }
-)
 
-document
-  .getElementById('today')
-  .getElementsByTagName('elm-period-picker-default')[0]
-  .addEventListener("emitSelected", function(portData) {
-    console.log("fucking awsome ", portData.detail)
-  }
-)
+picker.addEventListener("emitSelected", function(portData) {
+  console.log("fucking awsome ", portData.detail)
+})
+
+// window.cals = picker.shadowRoot.querySelector('.calenders')
+window.cals = picker.querySelector('.calenders')
+
+
+// document
+//   .getElementById('w1420')
+//   .getElementsByTagName('elm-period-picker-default')[0]
+//   .addEventListener("emitSelected", function(portData) {
+//     console.log("fucking awsome ", portData.detail)
+//   }
+// )
+
+// document
+//   .getElementById('today')
+//   .getElementsByTagName('elm-period-picker-default')[0]
+//   .addEventListener("emitSelected", function(portData) {
+//     console.log("fucking awsome ", portData.detail)
+//   }
+// )
 
 // If you want your app to work offline and load faster, you can change
 // unregister() to register() below. Note this comes with some pitfalls.

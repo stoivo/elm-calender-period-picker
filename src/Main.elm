@@ -1,12 +1,14 @@
 port module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
+import Browser.Dom as Dom
 import Html exposing (Html, button, div, h1, img, p, text)
-import Html.Attributes exposing (class, disabled, src)
+import Html.Attributes exposing (class, disabled, id, src)
 import Html.Events exposing (onClick)
 import Iso8601
 import Json.Decode as Json
 import List exposing ((::))
+import Task
 import Time exposing (utc)
 import Time.Extra
 
@@ -387,7 +389,7 @@ view : Model -> Html Msg
 view model =
     let
         calenders =
-            div [ class "calenders" ]
+            div [ id "calenders", class "calenders" ]
                 (List.range
                     (model.first_date |> Time.toYear utc)
                     (model.last_date |> Time.toYear utc)
@@ -395,7 +397,10 @@ view model =
                 )
     in
     if model.config.showUnpick then
-        div [] [ button [ onClick UnPick ] [ text "unpick" ], calenders ]
+        div []
+            [ button [ onClick UnPick ] [ text "unpick" ]
+            , calenders
+            ]
 
     else
         div [] [ calenders ]
