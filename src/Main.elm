@@ -355,6 +355,7 @@ type Msg
     = NoOp
     | Pick RowType
     | UnPick
+    | ScrollY Int
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -368,11 +369,22 @@ update msg model =
                 }
             )
 
+        ScrollY pixels ->
+            -- https://ellie-app.com/55LNyTg8f3ka1
+            ( model, jumpToBottom "calenders" pixels )
+
         NoOp ->
             ( model, Cmd.none )
 
         UnPick ->
             ( { model | picked = Nothing }, emitUnpicked () )
+
+
+jumpToBottom : String -> Int -> Cmd Msg
+jumpToBottom id pixels =
+    Browser.Dom.getViewportOf id
+        |> Task.andThen (\info -> Browser.Dom.setViewportOf id ((+) (toFloat pixels) info.viewport.x) 0)
+        |> Task.attempt (\_ -> NoOp)
 
 
 port emitSelected : { end : String, start : String } -> Cmd msg
@@ -397,9 +409,11 @@ view model =
                 )
     in
     if model.config.showUnpick then
-        div []
+        div [ class "structure-holder" ]
             [ button [ onClick UnPick ] [ text "unpick" ]
             , calenders
+            , button [ id "button-to-go-left", onClick (ScrollY -100) ] [ text "⏪" ]
+            , button [ id "button-to-go-right", onClick (ScrollY 100) ] [ text "⏩" ]
             ]
 
     else
