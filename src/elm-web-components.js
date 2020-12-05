@@ -98,12 +98,3 @@ const elmWebComponents = {
 }
 
 module.exports = elmWebComponents
-
-function zoom(event) {
-  event.preventDefault();
-  window.cals.scrollLeft += (event.deltaY * 2)
-}
-
-window.zoom = zoom;
-const el = document.querySelector('div');
-el.onwheel = zoom;

@@ -1,7 +1,7 @@
 port module Main exposing (Model, Msg(..), init, main, update, view)
 
 import Browser
-import Browser.Dom as Dom
+import Browser.Dom exposing (Viewport)
 import Html exposing (Html, button, div, h1, img, p, text)
 import Html.Attributes exposing (class, disabled, id, src)
 import Html.Events exposing (onClick)
@@ -397,11 +397,37 @@ port emitUnpicked : () -> Cmd msg
 ---- VIEW ----
 
 
+type alias ScrollEventMini =
+    { deltaY : Int
+    , deltaX : Int
+    }
+
+
+onWheelVerticalScroll : Html.Attribute Msg
+onWheelVerticalScroll =
+    Html.Events.custom "wheel"
+        (Json.map2 ScrollEventMini
+            (Json.field "deltaY" Json.int)
+            (Json.field "deltaX" Json.int)
+            |> Json.map
+                (\event ->
+                    { message = ScrollY ((event.deltaX + event.deltaY) * 4)
+                    , stopPropagation = True
+                    , preventDefault = True
+                    }
+                )
+        )
+
+
 view : Model -> Html Msg
 view model =
     let
         calenders =
-            div [ id "calenders", class "calenders" ]
+            div
+                [ id "calenders"
+                , class "calenders"
+                , onWheelVerticalScroll
+                ]
                 (List.range
                     (model.first_date |> Time.toYear utc)
                     (model.last_date |> Time.toYear utc)
